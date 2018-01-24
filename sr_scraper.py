@@ -1,38 +1,27 @@
 from bs4 import BeautifulSoup
-import requests 
-from clan import CLAN
 
-stats_royale_url = "http://statsroyale.com/clan/"
+def createDataFile(html_doc):
+    soup = BeautifulSoup(html_doc, "html.parser")
 
-clan_url = stats_royale_url + CLAN
-#r = requests.get(clan_url)
-#html_doc = r.text
+    data = soup.find_all("div", class_="clan__rowContainer")
 
-with open("test_html.html", encoding="utf8") as f:
-    html_doc = f.read()
-	
-soup = BeautifulSoup(html_doc, "html.parser")
+    # Each member of the clan will have a seperate dictionary within the members dictionary
+    clan_data = {}
 
-data = soup.find_all("div", class_="clan__rowContainer")
-print(data[0])
-# for d in data:
-#    print(d)
-members = {}
-keys = ["Rank", "Name", "Level", "League", "Trophies", "Crowns", "Donations", "Role"]
-i = 0
-
-'''
-for d in data:
-    member_data = d.find_all("div", class_="clan__row")
-    for col in member_data:
-        print(keys[i] + " = " + col.get_text())
-        i = i + 1
+    # Define keys for each individual member's dictionary
+    keys = ["Rank", "Name", "Level", "League", "Trophies", "Crowns", "Donations", "Role"]
     i = 0
-'''
-member_data = data[0].find_all("div", class_="clan__row")
-for col in member_data:
-    print(keys[i] + " = " + col.get_text().strip())
-    i = i + 1
-    
 
+    for d in data:
+        # Each member of the clan has a row in the html table, defined by the class clan__row
+        member_data = d.find_all("div", class_="clan__row")
+
+        # Each member's unique user ID is housed in a link. Skip the first 31 characters: http://statsroyale.com/profile/
+        user_id = d.a["href"][31:]
+        clan_data[user_id] = {}
+        for col in member_data:
+            clan_data[user_id][keys[i]] = col.get_text().strip()
+            i = i + 1
+        i = 0
+    return clan_data
 
